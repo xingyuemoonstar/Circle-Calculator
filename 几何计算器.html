@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>几何计算器</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f9f9f9, #f0f0f0);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.7); /* 降低透明度 */
+            backdrop-filter: blur(20px); /* 增强模糊效果 */
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px min(5vw, 50px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .top-bar .subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+
+        #customize-pi-btn,
+        #settings-btn {
+            padding: 10px 20px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-left: 10px;
+        }
+
+        #customize-pi-btn:hover,
+        #settings-btn:hover {
+            background-color: #d0d0d0;
+            transform: scale(1.05);
+        }
+
+        .container {
+            padding: 120px min(5vw, 50px) 20px;
+            width: 90%;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .calculator-section {
+            margin-bottom: 30px;
+            animation: fadeInSection 0.6s ease;
+        }
+
+        @keyframes fadeInSection {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calculator-section h2 {
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .calculator-section h3 {
+            color: #777;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #777;
+            font-size: 16px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .button-group button {
+            padding: 12px 24px;
+            background-color: #6699cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 16px;
+        }
+
+        .button-group button:hover {
+            background-color: #5588bb;
+            transform: scale(1.05);
+        }
+
+        .result {
+            background-color: rgba(233, 247, 239, 0.9);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 5px;
+            color: #28a745;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+            animation: fadeInText 0.6s ease;
+        }
+
+        @keyframes fadeInText {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .result.fade-out {
+            animation: fadeOutText 0.3s ease forwards;
+        }
+
+        @keyframes fadeOutText {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        .result.placeholder {
+            color: #999;
+            font-weight: normal;
+        }
+
+        .copy-status {
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .copy-status.copied {
+            color: #28a745;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 120px 10px 10px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .top-bar {
+                padding: 15px 10px;
+            }
+            .top-bar h1 {
+                font-size: 24px;
+            }
+            .top-bar .subtitle {
+                font-size: 12px;
+            }
+            #customize-pi-btn,
+            #settings-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            .modal-content {
+                width: 90%;
+                padding: 20px;
+            }
+            .modal-content h2 {
+                font-size: 20px;
+            }
+            .modal-content p {
+                font-size: 14px;
+            }
+            .modal-content button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        /* 自定义 π 值弹窗样式 */
+        #customize-pi-modal,
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            animation: fadeInModal 0.3s ease;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOutModal {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            animation: slideUpModal 0.3s ease;
+            width: 350px;
+            position: relative;
+        }
+
+        @keyframes slideUpModal {
+            from {
+                transform: translateY(20px);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDownModal {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(20px);
+            }
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+        .modal-content p {
+            color: #777;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            outline: none;
+            margin: 20px 0;
+            transition: background 0.3s ease;
+        }
+
+        .modal-content input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #6699cc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, left 0.2s ease;
+        }
+
+        .modal-content input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #6699cc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, left 0.2s ease;
+        }
+
+        .modal-content input[type="range"]:hover {
+            background: #d0d0d0;
+        }
+
+        .modal-content input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-content input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-content #slider-value {
+            display: block;
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .modal-content .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .modal-content button {
+            padding: 12px 24px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 16px;
+        }
+
+        .modal-content button:hover {
+            background-color: #d0d0d0;
+            transform: scale(1.05);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 0px;
+            right: 18px;
+            font-size: 34px;
+            cursor: pointer;
+            color: #333;
+            transition: color 0.3s ease;
+            padding: 5px;
+        }
+
+        .close-modal:hover {
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 顶栏 -->
+    <div class="top-bar">
+        <div>
+            <h1>几何计算器</h1>
+            <span class="subtitle">by xingyue</span>
+        </div>
+        <div>
+            <button id="settings-btn" onclick="openSettingsModal()">设置</button>
+            <button id="customize-pi-btn" onclick="openCustomizePiModal()">修改派值</button>
+        </div>
+    </div>
+    <div class="container">
+        <!-- 平面图形 -->
+        <div class="calculator-section">
+            <h2>平面图形</h2>
+
+            <!-- 圆形 -->
+            <h3>圆形</h3>
+            <div class="input-group">
+                <label for="circle-radius">圆的半径：</label>
+                <input type="number" id="circle-radius" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('circle', 'area')">计算圆的面积</button>
+                <button onclick="calculate('circle', 'circumference')">计算圆的周长</button>
+            </div>
+            <div class="result" id="circle-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 三角形 -->
+            <h3>三角形</h3>
+            <div class="input-group">
+                <label for="triangle-base">三角形的底：</label>
+                <input type="number" id="triangle-base" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="triangle-height">三角形的高：</label>
+                <input type="number" id="triangle-height" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('triangle', 'area')">计算三角形的面积</button>
+            </div>
+            <div class="result" id="triangle-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 矩形 -->
+            <h3>矩形</h3>
+            <div class="input-group">
+                <label for="rectangle-length">矩形的长：</label>
+                <input type="number" id="rectangle-length" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="rectangle-width">矩形的宽：</label>
+                <input type="number" id="rectangle-width" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('rectangle', 'area')">计算矩形的面积</button>
+                <button onclick="calculate('rectangle', 'perimeter')">计算矩形的周长</button>
+            </div>
+            <div class="result" id="rectangle-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 正方形 -->
+            <h3>正方形</h3>
+            <div class="input-group">
+                <label for="square-side">正方形的边长：</label>
+                <input type="number" id="square-side" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('square', 'area')">计算正方形的面积</button>
+                <button onclick="calculate('square', 'perimeter')">计算正方形的周长</button>
+            </div>
+            <div class="result" id="square-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 梯形 -->
+            <h3>梯形</h3>
+            <div class="input-group">
+                <label for="trapezoid-base1">梯形的上底：</label>
+                <input type="number" id="trapezoid-base1" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="trapezoid-base2">梯形的下底：</label>
+                <input type="number" id="trapezoid-base2" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="trapezoid-height">梯形的高：</label>
+                <input type="number" id="trapezoid-height" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('trapezoid', 'area')">计算梯形的面积</button>
+            </div>
+            <div class="result" id="trapezoid-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+        </div>
+
+        <!-- 立体图形 -->
+        <div class="calculator-section">
+            <h2>立体图形</h2>
+
+            <!-- 球体 -->
+            <h3>球体</h3>
+            <div class="input-group">
+                <label for="sphere-radius">球体的半径：</label>
+                <input type="number" id="sphere-radius" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('sphere', 'volume')">计算球体的体积</button>
+                <button onclick="calculate('sphere', 'surfaceArea')">计算球体的表面积</button>
+            </div>
+            <div class="result" id="sphere-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 圆柱体 -->
+            <h3>圆柱体</h3>
+            <div class="input-group">
+                <label for="cylinder-radius">圆柱体的半径：</label>
+                <input type="number" id="cylinder-radius" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="cylinder-height">圆柱体的高：</label>
+                <input type="number" id="cylinder-height" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('cylinder', 'volume')">计算圆柱体的体积</button>
+                <button onclick="calculate('cylinder', 'surfaceArea')">计算圆柱体的表面积</button>
+            </div>
+            <div class="result" id="cylinder-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 正方体 -->
+            <h3>正方体</h3>
+            <div class="input-group">
+                <label for="cube-side">正方体的边长：</label>
+                <input type="number" id="cube-side" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('cube', 'volume')">计算正方体的体积</button>
+                <button onclick="calculate('cube', 'surfaceArea')">计算正方体的表面积</button>
+                <button onclick="calculate('cube', 'edgeLength')">计算正方体的棱长和</button>
+            </div>
+            <div class="result" id="cube-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+
+            <!-- 圆锥体 -->
+            <h3>圆锥体</h3>
+            <div class="input-group">
+                <label for="cone-radius">圆锥体的半径：</label>
+                <input type="number" id="cone-radius" step="any" min="0">
+            </div>
+            <div class="input-group">
+                <label for="cone-height">圆锥体的高：</label>
+                <input type="number" id="cone-height" step="any" min="0">
+            </div>
+            <div class="button-group">
+                <button onclick="calculate('cone', 'volume')">计算圆锥体的体积</button>
+                <button onclick="calculate('cone', 'surfaceArea')">计算圆锥体的表面积</button>
+            </div>
+            <div class="result" id="cone-result">
+                <span class="result-value placeholder">此处将会输出</span>
+                <span class="copy-status" style="display: none;">点击复制</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义 π 值弹窗 -->
+    <div id="customize-pi-modal">
+        <div class="modal-content">
+            <h2>自定义 π 值小数位数</h2>
+            <span class="close-modal" onclick="closeCustomizePiModal()">&times;</span>
+            <p>请使用滑条选择 π 值保留的小数位数（1 - 10 位）：</p>
+            <input type="range" id="custom-pi-slider" min="1" max="10" value="2">
+            <span id="slider-value">当前设置：2 位小数</span>
+            <div class="button-group">
+                <button onclick="setCustomPi()">确定</button>
+                <button onclick="closeCustomizePiModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settings-modal">
+        <div class="modal-content">
+            <h2>设置</h2>
+            <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
+            <!-- 暂时没有内容 -->
+        </div>
+    </div>
+
+    <script>
+        let piValue = 3.14;
+        let decimalPlaces = 2;
+
+        // 通用输入验证函数
+        function validateInput(value) {
+            const num = parseFloat(value);
+            return !isNaN(num) && num > 0;
+        }
+
+        // 通用显示结果函数
+        function showResult(elementId, message, resultValue) {
+            const resultElement = document.getElementById(elementId);
+            const valueSpan = resultElement.querySelector('.result-value');
+            const copyStatusSpan = resultElement.querySelector('.copy-status');
+
+            if (!valueSpan.classList.contains('placeholder')) {
+                resultElement.classList.add('fade-out');
+                setTimeout(() => {
+                    valueSpan.textContent = message;
+                    if (message === '请输入大于0的有效数字。') {
+                        copyStatusSpan.style.display = 'none'; // 隐藏复制键
+                    } else {
+                        copyStatusSpan.style.display = 'inline';
+                        copyStatusSpan.textContent = '点击复制';
+                        copyStatusSpan.classList.remove('copied');
+                    }
+                    resultElement.classList.remove('fade-out');
+                    resultElement.classList.add('show');
+                }, 300);
+            } else {
+                valueSpan.classList.remove('placeholder');
+                valueSpan.textContent = message;
+                if (message === '请输入大于0的有效数字。') {
+                    copyStatusSpan.style.display = 'none'; // 隐藏复制键
+                } else {
+                    copyStatusSpan.style.display = 'inline';
+                    copyStatusSpan.textContent = '点击复制';
+                    copyStatusSpan.classList.remove('copied');
+                }
+                resultElement.classList.add('show');
+            }
+
+            if (message !== '请输入大于0的有效数字。') {
+                resultElement.onclick = function () {
+                    navigator.clipboard.writeText(resultValue.toString()).then(() => {
+                        copyStatusSpan.textContent = '已复制';
+                        copyStatusSpan.classList.add('copied');
+                    }).catch((err) => {
+                        console.error('复制失败: ', err);
+                    });
+                };
+
+                copyStatusSpan.onclick = function () {
+                    navigator.clipboard.writeText(resultValue.toString()).then(() => {
+                        copyStatusSpan.textContent = '已复制';
+                        copyStatusSpan.classList.add('copied');
+                    }).catch((err) => {
+                        console.error('复制失败: ', err);
+                    });
+                };
+            }
+        }
+
+        // 圆的计算函数
+        const circleCalculations = {
+            area: (radius) => piValue * radius * radius,
+            circumference: (radius) => 2 * piValue * radius
+        };
+
+        // 三角形的计算函数
+        const triangleCalculations = {
+            area: (base, height) => 0.5 * base * height
+        };
+
+        // 矩形的计算函数
+        const rectangleCalculations = {
+            area: (length, width) => length * width,
+            perimeter: (length, width) => 2 * (length + width)
+        };
+
+        // 正方形的计算函数
+        const squareCalculations = {
+            area: (side) => side * side,
+            perimeter: (side) => 4 * side
+        };
+
+        // 梯形的计算函数
+        const trapezoidCalculations = {
+            area: (base1, base2, height) => 0.5 * (base1 + base2) * height
+        };
+
+        // 球体的计算函数
+        const sphereCalculations = {
+            volume: (radius) => (4 / 3) * piValue * Math.pow(radius, 3),
+            surfaceArea: (radius) => 4 * piValue * Math.pow(radius, 2)
+        };
+
+        // 圆柱体的计算函数
+        const cylinderCalculations = {
+            volume: (radius, height) => piValue * Math.pow(radius, 2) * height,
+            surfaceArea: (radius, height) => 2 * piValue * radius * (radius + height)
+        };
+
+        // 正方体的计算函数
+        const cubeCalculations = {
+            volume: (side) => Math.pow(side, 3),
+            surfaceArea: (side) => 6 * Math.pow(side, 2),
+            edgeLength: (side) => 12 * side
+        };
+
+        // 圆锥体的计算函数
+        const coneCalculations = {
+            volume: (radius, height) => (1 / 3) * piValue * Math.pow(radius, 2) * height,
+            surfaceArea: (radius, height) => piValue * radius * (radius + Math.sqrt(Math.pow(height, 2) + Math.pow(radius, 2)))
+        };
+
+        // 统一计算函数
+        function calculate(shape, calculationType) {
+            const inputIds = {
+                circle: ['circle-radius'],
+                triangle: ['triangle-base', 'triangle-height'],
+                rectangle: ['rectangle-length', 'rectangle-width'],
+                square: ['square-side'],
+                trapezoid: ['trapezoid-base1', 'trapezoid-base2', 'trapezoid-height'],
+                sphere: ['sphere-radius'],
+                cylinder: ['cylinder-radius', 'cylinder-height'],
+                cube: ['cube-side'],
+                cone: ['cone-radius', 'cone-height']
+            }[shape];
+            const resultId = `${shape}-result`;
+            const values = [];
+
+            for (const id of inputIds) {
+                const input = document.getElementById(id);
+                if (!validateInput(input.value)) {
+                    showResult(resultId, '请输入大于0的有效数字。', '');
+                    return;
+                }
+                values.push(parseFloat(input.value));
+            }
+
+            const calculation = {
+                circle: circleCalculations,
+                triangle: triangleCalculations,
+                rectangle: rectangleCalculations,
+                square: squareCalculations,
+                trapezoid: trapezoidCalculations,
+                sphere: sphereCalculations,
+                cylinder: cylinderCalculations,
+                cube: cubeCalculations,
+                cone: coneCalculations
+            }[shape][calculationType];
+
+            const shapeName = {
+                circle: '圆形',
+                triangle: '三角形',
+                rectangle: '矩形',
+                square: '正方形',
+                trapezoid: '梯形',
+                sphere: '球体',
+                cylinder: '圆柱体',
+                cube: '正方体',
+                cone: '圆锥体'
+            }[shape];
+
+            const operationName = {
+                area: '面积',
+                circumference: '周长',
+                perimeter: '周长',
+                volume: '体积',
+                surfaceArea: '表面积',
+                edgeLength: '棱长和'
+            }[calculationType];
+
+            if (calculation) {
+                const result = calculation(...values);
+                const formattedResult = result.toFixed(decimalPlaces);
+                const message = `${shapeName}的${operationName}为：${formattedResult}`;
+                showResult(resultId, message, formattedResult);
+            }
+        }
+
+        // 打开自定义 π 值弹窗
+        function openCustomizePiModal() {
+            const modal = document.getElementById('customize-pi-modal');
+            const slider = document.getElementById('custom-pi-slider');
+            slider.value = decimalPlaces;
+            document.getElementById('slider-value').textContent = `当前设置：${decimalPlaces} 位小数`;
+
+            modal.style.display = 'flex';
+            modal.style.animation = 'fadeInModal 0.3s ease';
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.style.animation = 'slideUpModal 0.3s ease';
+        }
+
+        // 关闭自定义 π 值弹窗
+        function closeCustomizePiModal() {
+            const modal = document.getElementById('customize-pi-modal');
+            modal.style.animation = 'fadeOutModal 0.3s ease';
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.style.animation = 'slideDownModal 0.3s ease';
+            modalContent.addEventListener('animationend', function () {
+                modal.style.display = 'none';
+                modalContent.removeEventListener('animationend', arguments.callee);
+            });
+        }
+
+        // 设置自定义 π 值小数位数
+        function setCustomPi() {
+            const slider = document.getElementById('custom-pi-slider');
+            decimalPlaces = parseInt(slider.value);
+            piValue = parseFloat(Math.PI.toFixed(decimalPlaces));
+            closeCustomizePiModal();
+        }
+
+        // 实时更新滑条显示的小数位数
+        document.getElementById('custom-pi-slider').addEventListener('input', function () {
+            document.getElementById('slider-value').textContent = `当前设置：${this.value} 位小数`;
+        });
+
+        // 打开设置弹窗
+        function openSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.display = 'flex';
+            modal.style.animation = 'fadeInModal 0.3s ease';
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.style.animation = 'slideUpModal 0.3s ease';
+        }
+
+        // 关闭设置弹窗
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.animation = 'fadeOutModal 0.3s ease';
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.style.animation = 'slideDownModal 0.3s ease';
+            modalContent.addEventListener('animationend', function () {
+                modal.style.display = 'none';
+                modalContent.removeEventListener('animationend', arguments.callee);
+            });
+        }
+    </script>
+</body>
+
+</html>

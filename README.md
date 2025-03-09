@@ -1,2 +1,2 @@
-这是一个非常简易的圆形以及一些曲面图形的C++类型计算器
-This is a very simple C++ calculator for circular and some curved surface figures.
+这是一个非常简易的几何图形计算器，可以计算面积、体积、表面积等非常多的内容
+This is a very simple geometric shape calculator that can calculate a wide range of contents, including areas, volumes, surface areas, and more.
